@@ -7,6 +7,7 @@ import {
 import { runTest } from './engine.js';
 import { introTest } from './intros.js';
 import { renderClasse } from './classe.js';
+import { renderFreinage, tempsEleve } from './freinage.js';
 
 const app = document.getElementById('app');
 const idEl = h('span', { class: 'identite' });
@@ -274,7 +275,7 @@ function ecranCalculs() {
 
 // ── 3. Fin : résultats, classe, essais hors série ────────────────────────
 function ecranFini(onglet, bravo = false) {
-  const tabs = [['resultats', 'Mes résultats'], ['classe', 'La classe'], ['hors', 'Refaire un test']];
+  const tabs = [['resultats', 'Mes résultats'], ['classe', 'La classe'], ['freinage', 'Freinage'], ['hors', 'Refaire un test']];
   const contenu = h('div', { class: 'onglet' });
   const nav = h('nav', { class: 'onglets' }, tabs.map(([k, l]) =>
     h('button', { class: 'tab' + (k === onglet ? ' actif' : ''), onclick: () => ecranFini(k) }, l)));
@@ -296,6 +297,8 @@ function ecranFini(onglet, bravo = false) {
   } else if (onglet === 'classe') {
     rafraichir = () => renderClasse(contenu, eleves, { moi: { ilot: S.ilot, mode: S.mode } });
     rafraichir();
+  } else if (onglet === 'freinage') {
+    renderFreinage(contenu, tempsEleve(S.data.stats, MODES[S.mode].nom));
   } else {
     contenu.append(
       h('p', {}, 'Tu veux améliorer ton temps ? Tu peux refaire un test.'),

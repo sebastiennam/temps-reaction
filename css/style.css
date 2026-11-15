@@ -225,3 +225,28 @@ th { background: #eef1f6; font-weight: 600; }
 .reglage { margin: 12px 0; }
 .ov-choix { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 a.tab { text-decoration: none; margin-left: auto; }
+
+/* Onglet Freinage */
+.fr-reglages { display: grid; gap: 10px; margin: 12px 0 16px; }
+.fr-choix { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 10px; }
+.fr-choix .boutons { margin: 0; gap: 8px; }
+.fr-label { font-weight: 700; color: var(--doux); }
+.fr-vitesse { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.fr-curseur { width: min(360px, 60vw); height: 32px; accent-color: var(--accent); }
+.fr-vitesse b { font-size: 1.3rem; min-width: 90px; }
+.fr-bloc { margin: 14px 0; }
+.fr-ligne { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 1.1rem; }
+.fr-barre { height: 22px; border-radius: 11px; background: var(--bord); overflow: hidden; }
+.fr-ec { height: 100%; background: linear-gradient(90deg, #f59f00, #e8590c); transition: width .25s; }
+.fr-route { position: relative; height: 54px; margin-top: 40px; background: #5b5f66; border-radius: 6px; overflow: visible; }
+.fr-seg { position: absolute; top: 16px; height: 22px; transition: all .25s; }
+.fr-reac, .fr-pastille.fr-reac { background: #fab005; }
+.fr-frein, .fr-pastille.fr-frein { background: #e03131; }
+.fr-auto { position: absolute; left: -4px; top: -34px; font-size: 28px; transform: scaleX(-1); }
+.fr-stop { position: absolute; top: 10px; font-size: 26px; transform: translateX(-50%); transition: left .25s; }
+.fr-regle { position: relative; height: 22px; margin-top: 4px; }
+.fr-grad { position: absolute; transform: translateX(-50%); white-space: nowrap; font-size: .8rem; color: var(--doux); border-left: 1px solid var(--doux); padding-left: 3px; }
+.fr-pastille { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 8px; vertical-align: -2px; }
+.fr-total td { font-weight: 800; }
+.fr-table td:last-child { text-align: right; }
+@media (max-width: 600px) { .fr-choix { grid-template-columns: 1fr; } }

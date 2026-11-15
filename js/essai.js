@@ -3,6 +3,7 @@
 import { MODES, ORDRE_MODES, h, stats, fmt } from './common.js';
 import { runTest } from './engine.js';
 import { introTest } from './intros.js';
+import { renderFreinage } from './freinage.js';
 
 const app = document.getElementById('app');
 const main = h('main', { id: 'main' });
@@ -26,7 +27,8 @@ function menu() {
     h('p', {}, 'Choisis un test pour voir exactement ce que voient les élèves : écran d\'explication, entraînement, puis essais comptés.'),
     h('div', { class: 'grille-ilots' },
       carte('temoin', 'Témoin', 'La voiture devant freine, rien d\'autre à faire'),
-      ...ORDRE_MODES.map(m => carte(m, `${m} — ${MODES[m].nom}`, MODES[m].titre))),
+      ...ORDRE_MODES.map(m => carte(m, `${m} — ${MODES[m].nom}`, MODES[m].titre)),
+      h('button', { class: 'btn big', onclick: freinage }, h('strong', {}, 'Onglet Freinage'), h('br'), h('small', {}, "Énergie cinétique et distance d'arrêt"))),
     h('p', { style: 'margin-top:24px' }, 'Longueur du test :'),
     choixN));
 }
@@ -49,6 +51,13 @@ function lancer(kind) {
           h('button', { class: 'btn big', onclick: menu }, 'Autre mode'))));
     },
   });
+}
+
+function freinage() {
+  test?.abort(); test = null; retour.hidden = false;
+  const el = h('div');
+  main.replaceChildren(h('div', { class: 'screen' }, h('h1', {}, 'Freinage'), el));
+  renderFreinage(el, { a: { nom: 'Élève rapide (0,35 s)', s: 0.35 }, b: { nom: 'Élève distrait (0,8 s)', s: 0.8 }, code: { nom: 'Code de la route (1 s)', s: 1 } });
 }
 
 menu();
