@@ -40,7 +40,8 @@ function afficher() {
   const contenu = h('div', { class: 'onglet' });
   main.replaceChildren(h('div', { class: 'screen large' },
     h('nav', { class: 'onglets' }, tabs.map(([k, l]) =>
-      h('button', { class: 'tab' + (k === onglet ? ' actif' : ''), onclick: () => { onglet = k; afficher(); } }, l))),
+      h('button', { class: 'tab' + (k === onglet ? ' actif' : ''), onclick: () => { onglet = k; afficher(); } }, l)),
+      h('a', { class: 'tab', href: 'essai.html', target: '_blank' }, 'Essayer les modes ↗')),
     contenu));
   const vues = { avancement, ilots, classe, donnees };
   rafraichir = () => vues[onglet](contenu);

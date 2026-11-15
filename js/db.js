@@ -31,7 +31,7 @@ async function firebase() {
     logoutProf() { return au.signOut(auth); },
     watchEleves(cb) {
       return fs.onSnapshot(fs.collection(db, 'eleves'), { includeMetadataChanges: true },
-        s => cb(s.docs.map(d => ({ id: d.id, ...d.data() })), { fromCache: s.metadata.fromCache }), e => console.error(e));
+        s => cb(s.docs.map(d => ({ id: d.id, ...d.data() })), { fromCache: s.metadata.fromCache }), e => console.error('watchEleves', e));
     },
     // Réserve une identité « îlot + mode » : échoue si quelqu'un l'a prise entre-temps.
     async claimEleve(id, data) {
@@ -52,7 +52,7 @@ async function firebase() {
     },
     watchConfig(cb) {
       return fs.onSnapshot(fs.doc(db, 'config', 'ilots'), { includeMetadataChanges: true },
-        s => cb(s.exists() ? s.data() : null, { fromCache: s.metadata.fromCache }), e => console.error(e));
+        s => cb(s.exists() ? s.data() : null, { fromCache: s.metadata.fromCache }), e => console.error('watchConfig', e));
     },
     saveEleve(id, data) {
       return fs.setDoc(fs.doc(db, 'eleves', id), { ...propre(data), maj: fs.serverTimestamp() }, { merge: true })
