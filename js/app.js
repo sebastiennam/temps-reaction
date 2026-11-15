@@ -2,7 +2,7 @@
 import { initDb, DEMO } from './db.js';
 import {
   ILOTS, MODES, ETAPES, LIBELLE_ETAPE, modesPourTaille, ilotById, docId, identite,
-  stats, fmt, h, pick, parseNombre, lsGet, lsSet, lsDel,
+  stats, fmt, h, pick, parseNombre, lsGet, lsSet, lsDel, VISITE, N_ESSAIS,
 } from './common.js';
 import { runTest } from './engine.js';
 import { introTest } from './intros.js';
@@ -14,7 +14,9 @@ const quitBtn = h('button', { class: 'btn petit', onclick: () => { if (confirm('
 const main = h('main', { id: 'main' });
 app.append(...[
   h('header', { class: 'barre' }, h('span', { class: 'titre' }, '⏱️ Temps de réaction'), idEl, quitBtn),
-  DEMO ? h('div', { class: 'demo' }, 'Mode démo : les données restent sur cet appareil.') : null,
+  VISITE ? h('div', { class: 'demo' }, "Visite enseignant : tests raccourcis à 3 essais, rien n'est envoyé à la classe. ",
+    h('button', { class: 'btn petit', onclick: recommencerVisite }, 'Recommencer la visite'))
+  : DEMO ? h('div', { class: 'demo' }, 'Mode démo : les données restent sur cet appareil.') : null,
   main].filter(Boolean));
 
 let db, eleves = [], config = null, S = null, rafraichir = null, testEnCours = null;
@@ -172,7 +174,7 @@ function ecranTest(quoi) {
   // Essais déjà comptés avant un plantage (gardés sur la tablette uniquement).
   const enCours = S.data._enCours?.quoi === quoi ? S.data._enCours : null;
   testEnCours = runTest(main, {
-    kind,
+    kind, nCount: N_ESSAIS,
     titre: quoi === 'temoin' ? 'Test 1 : le test témoin' : `Test 2 : ${MODES[S.mode].titre}`,
     intro: introTest(kind),
     reprise: enCours,
@@ -194,17 +196,17 @@ function tableTemps(times) {
 function recap(titre, r, suite) {
   ecran(
     h('h1', {}, titre),
-    h('p', {}, 'Tes 10 temps, en millisecondes (ms) :'),
+    h('p', {}, `Tes ${r.times.length} temps, en millisecondes (ms) :`),
     tableTemps(r.times),
     h('p', { class: 'petit-texte' }, `Faux départs : ${r.fauxDeparts} · Essais refaits : ${r.aRefaire}`),
-    h('p', { class: 'info' }, '✏️ Vérifiez ensemble que les 10 temps sont bien recopiés sur la feuille.'),
+    h('p', { class: 'info' }, '✏️ Vérifiez ensemble que les temps sont bien recopiés sur la feuille.'),
     h('button', { class: 'btn primary big', onclick: suite }, 'C\'est vérifié, continuer'));
 }
 
 function ecranPause() {
   ecran(
     h('h1', {}, 'Tes deux tests sont terminés ! 🎉'),
-    h('p', {}, 'Sur ta feuille, pour chaque test : range tes 10 valeurs dans l\'ordre, puis calcule la moyenne, la médiane et l\'étendue.'),
+    h('p', {}, 'Sur ta feuille, pour chaque test : range tes valeurs dans l\'ordre, puis calcule la moyenne, la médiane et l\'étendue.'),
     h('p', { class: 'info' }, `Pour revenir plus tard : choisis ton îlot, puis « Je reprends », puis « ${identite(S.ilot, S.mode)} ».`),
     h('div', { class: 'boutons' },
       h('button', { class: 'btn primary big', onclick: quitter }, 'Je laisse la tablette à l\'élève suivant'),
@@ -222,7 +224,7 @@ function ecranCalculs() {
     const champLibelle = (nom, inp) => h('label', {}, nom, h('span', { class: 'ligne-champ' }, inp, h('span', { class: 'unite' }, 'ms')));
     b.el = h('section', { class: 'bloc-calcul' },
       h('h2', {}, b.titre),
-      h('p', { class: 'petit-texte' }, 'Tes 10 temps (ms), dans l\'ordre des essais :'),
+      h('p', { class: 'petit-texte' }, `Tes ${b.times.length} temps (ms), dans l'ordre des essais :`),
       tableTemps(b.times),
       h('div', { class: 'champs' },
         champLibelle('Moyenne', b.moy), champLibelle('Médiane', b.med), champLibelle('Étendue', b.et)));
@@ -307,7 +309,7 @@ function ecranFini(onglet, bravo = false) {
 function horsSerie(kind) {
   arreterTest(); rafraichir = null;
   testEnCours = runTest(main, {
-    kind, nTrain: 0,
+    kind, nTrain: 0, nCount: N_ESSAIS,
     titre: 'Essai hors série (non compté)',
     intro: introTest(kind),
     onDone: r => {
@@ -320,6 +322,11 @@ function horsSerie(kind) {
         h('button', { class: 'btn primary big', onclick: () => ecranFini('hors') }, 'Retour'));
     },
   });
+}
+
+function recommencerVisite() {
+  try { Object.keys(localStorage).filter(k => k.startsWith('tr_')).forEach(k => localStorage.removeItem(k)); } catch { /* rien */ }
+  location.reload();
 }
 
 // ── Démarrage ────────────────────────────────────────────────────────────

@@ -1,3 +1,7 @@
+// Visite enseignant (?visite) : parcours élève complet, tests raccourcis, données locales uniquement.
+export const VISITE = new URLSearchParams(location.search).has('visite');
+export const N_ESSAIS = VISITE ? 3 : 10;
+
 export const ILOTS = [
   { id: 'turing',    court: 'Turing',    nom: 'Alan Turing' },
   { id: 'archimede', court: 'Archimède', nom: 'Archimède' },

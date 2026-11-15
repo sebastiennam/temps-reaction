@@ -20,7 +20,7 @@ export function runTest(root, opts) {
       intro,
       dejaFaits ? h('p', { class: 'info' }, `Reprise : ${dejaFaits} essai${dejaFaits > 1 ? 's' : ''} déjà fait${dejaFaits > 1 ? 's' : ''} sur ${nCount}. Tu continues là où tu t'étais arrêté.`) : null,
       h('button', { class: 'btn primary big', onclick: demarrer },
-        dejaFaits ? 'Reprendre le test' : nTrain ? "Commencer par un essai d'entraînement" : 'Commencer les 10 essais')));
+        dejaFaits ? 'Reprendre le test' : nTrain ? "Commencer par un essai d'entraînement" : `Commencer les ${nCount} essais`)));
 
   return controle;
 

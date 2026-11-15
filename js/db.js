@@ -1,7 +1,8 @@
 // Accès aux données : Firebase (Firestore) si configuré, sinon mode démo local.
 import { firebaseConfig, PROF_UID } from './config.js';
+import { VISITE } from './common.js';
 
-export const DEMO = !firebaseConfig || !firebaseConfig.apiKey;
+export const DEMO = VISITE || !firebaseConfig || !firebaseConfig.apiKey;
 const CHAMPS = ['ilot', 'mode', 'step', 'estimation', 'temoin', 'test', 'stats', 'validated', 'essaisCalc'];
 const propre = d => Object.fromEntries(CHAMPS.filter(k => d[k] !== undefined).map(k => [k, d[k]]));
 
@@ -68,11 +69,11 @@ async function firebase() {
 }
 
 function demo() {
-  const KEY = 'tr_demo_db';
+  const KEY = VISITE ? 'tr_visite_db' : 'tr_demo_db';
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || { config: null, eleves: {} }; } catch { return { config: null, eleves: {} }; } };
   const ecouteurs = new Set();
   const emit = () => ecouteurs.forEach(f => f());
-  const bc = 'BroadcastChannel' in window ? new BroadcastChannel('tr_demo') : null;
+  const bc = 'BroadcastChannel' in window ? new BroadcastChannel(KEY) : null;
   if (bc) bc.onmessage = emit;
   window.addEventListener('storage', e => { if (e.key === KEY) emit(); });
   const save = d => { localStorage.setItem(KEY, JSON.stringify(d)); emit(); bc?.postMessage(1); };
