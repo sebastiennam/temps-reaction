@@ -1,0 +1,31 @@
+rules_version = '2';
+// Règles de sécurité Firestore — à coller dans la console Firebase :
+// Firestore Database → onglet « Règles » → remplacer tout → Publier.
+// Remplacez REMPLACER_PAR_UID_PROF par l'UID du compte professeur
+// (Authentication → Utilisateurs → colonne « UID utilisateur »).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function connecte() { return request.auth != null; }
+    function estProf() { return connecte() && request.auth.uid == "iQ5bZrmQTwYpPhm8eEVPoYJm6SX2"; }
+
+    // Réglage des îlots : lisible par tous, modifiable par le professeur seulement.
+    match /config/{docId} {
+      allow read: if connecte();
+      allow write: if estProf();
+    }
+
+    // Résultats des élèves : identifiant « ilot_mode » (ex. turing_C).
+    match /eleves/{eleveId} {
+      allow read: if connecte();
+      allow create, update: if connecte()
+        && eleveId.matches('^[a-z]+_[ABCD]$')
+        && request.resource.data.keys().hasOnly(
+             ['ilot', 'mode', 'step', 'estimation', 'temoin', 'test', 'stats', 'validated', 'essaisCalc', 'maj'])
+        && request.resource.data.ilot is string
+        && request.resource.data.mode in ['A', 'B', 'C', 'D'];
+      // Effacer : professeur uniquement.
+      allow delete: if estProf();
+    }
+  }
+}
