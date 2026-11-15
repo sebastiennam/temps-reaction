@@ -249,7 +249,7 @@ function sceneD(stage, api, { left, right }) {
   const sc = d => 0.04 + 0.96 * p(d);
   function proj(d, lat) {
     const s = sc(d), yh = H * 0.4;
-    return [W / 2 + (rc(T + 2.2 * d) + lat - px) * W * K * s, yh + (H - yh) * p(d), s];
+    return [W / 2 + (rc(T + d * PROF / VITESSE) + lat - px) * W * K * s, yh + (H - yh) * p(d), s];
   }
 
   function resize() {
@@ -278,13 +278,15 @@ function sceneD(stage, api, { left, right }) {
     // Décor de départ : quelques voitures garées et piétons déjà visibles.
     for (let d = 0.25; d < 0.95; d += rand(0.18, 0.35)) objets.push(garee(d));
     for (let k = 0; k < 2; k++) objets.push(passant(rand(0.3, 0.9)));
+    if (dangerType === 'freinage') { objets.push({ type: 'devant', danger: true, d: 0.42, lat: VOIE, c: pick(CARROSSERIES), frein: false }); dangerPose = true; }
+    else if (Math.random() < 0.5) objets.push({ type: 'devant', d: rand(0.45, 0.6), lat: VOIE, c: pick(CARROSSERIES), frein: false, vd: -rand(0.03, 0.06) });   // leurre : elle s'éloigne sans freiner
   }
 
   // ── fabriques d'objets ──
-  const garee = d => ({ type: 'garee', d, lat: 1.72, c: pick(CARROSSERIES) });
+  const garee = d => ({ type: 'garee', d, lat: 2.05, c: pick(CARROSSERIES) });
   const passant = (d = 0.97) => {
     const gauche = Math.random() < 0.35;
-    return { type: 'pieton', d, lat: gauche ? rand(-2.1, -1.7) : rand(2.25, 2.7), c: pick(COULEURS), vd: rand(-0.02, 0.02), vlat: 0 };
+    return { type: 'pieton', d, lat: gauche ? rand(-2.1, -1.7) : rand(2.6, 3.0), c: pick(COULEURS), vd: rand(-0.02, 0.02), vlat: 0 };
   };
 
   function quad(d1, d2, l1, l2, c) {
@@ -328,9 +330,10 @@ function sceneD(stage, api, { left, right }) {
     g.fillStyle = c; g.fillRect(x - w / 2, y - ht, w, ht * 0.8);
     g.fillStyle = '#a5d8ff'; g.fillRect(x - w * 0.35, y - ht * 1.25, w * 0.7, ht * 0.45);
     g.fillStyle = c; g.fillRect(x - w * 0.4, y - ht * 1.3, w * 0.8, ht * 0.07);
-    g.fillStyle = frein ? '#ff1a1a' : '#7a1f1f';
+    g.fillStyle = frein ? '#ff1a1a' : '#5a2a2a';
+    if (frein) g.fillRect(x - w * 0.12, y - ht * 1.22, w * 0.24, ht * 0.06);   // 3e feu stop
     g.fillRect(x - w * 0.46, y - ht * 0.8, w * 0.18, ht * 0.2); g.fillRect(x + w * 0.28, y - ht * 0.8, w * 0.18, ht * 0.2);
-    if (frein) { g.fillStyle = 'rgba(255,40,40,.35)'; g.beginPath(); g.arc(x - w * 0.37, y - ht * 0.7, w * 0.16, 0, 7); g.arc(x + w * 0.37, y - ht * 0.7, w * 0.16, 0, 7); g.fill(); }
+    if (frein) { g.fillStyle = 'rgba(255,40,40,.4)'; g.beginPath(); g.arc(x - w * 0.37, y - ht * 0.7, w * 0.24, 0, 7); g.fill(); g.beginPath(); g.arc(x + w * 0.37, y - ht * 0.7, w * 0.24, 0, 7); g.fill(); }
     g.fillStyle = '#111'; g.fillRect(x - w * 0.45, y - ht * 0.2, w * 0.2, ht * 0.2); g.fillRect(x + w * 0.25, y - ht * 0.2, w * 0.2, ht * 0.2);
   }
   // Voiture qui arrive en face : phares.
@@ -372,18 +375,18 @@ function sceneD(stage, api, { left, right }) {
       const d1 = i / N, d2 = (i - 1) / N;
       const bande = bandeDe(d1);
       quad(d1, d2, -2.4, -1.45, bande ? '#cfcac1' : '#c4beb4');  // trottoir gauche
-      quad(d1, d2, 2.0, 3.0, bande ? '#cfcac1' : '#c4beb4');     // trottoir droit
-      quad(d1, d2, -1.45, 2.0, '#5b5f66');                       // chaussée + stationnement
-      quad(d1, d2, 1.42, 2.0, '#666a71');                        // bande de stationnement
+      quad(d1, d2, 2.35, 3.3, bande ? '#cfcac1' : '#c4beb4');    // trottoir droit
+      quad(d1, d2, -1.45, 2.35, '#5b5f66');                      // chaussée + bande cyclable + stationnement
+      quad(d1, d2, 1.36, 1.75, '#b5533c');                       // bande cyclable (entre ma voie et les voitures garées)
+      quad(d1, d2, 1.75, 2.35, '#666a71');                       // stationnement
+      if (bande) quad(d1, d2, 1.73, 1.77, '#f1f1f1');            // limite stationnement
       quad(d1, d2, -1.45, -1.32, '#e9ecef');                     // bordures
-      quad(d1, d2, 1.0, 1.3, '#5d6f62');                         // bande cyclable
-      if (bande) quad(d1, d2, 0.98, 1.03, '#f1f1f1');            // sa ligne discontinue
       quad(d1, d2, 1.3, 1.36, '#f1f1f1');                        // ligne de rive
       if (bande) quad(d1, d2, -0.03, 0.03, '#f6f6f6');           // ligne centrale discontinue
     }
     for (const o of objets) if (o.type === 'carrefour' && o.d < 0.98) {   // rue transversale à droite
-      quad(Math.min(0.99, o.d + 0.035), Math.max(0, o.d - 0.035), 1.3, 3.2, '#5b5f66');
-      quad(Math.min(0.99, o.d + 0.045), Math.min(0.99, o.d + 0.035), 1.45, 2.2, '#f6f6f6');   // ligne « stop »
+      quad(Math.min(0.99, o.d + 0.035), Math.max(0, o.d - 0.035), 1.3, 3.5, '#5b5f66');
+      quad(Math.min(0.99, o.d + 0.045), Math.min(0.99, o.d + 0.035), 1.36, 2.35, '#f6f6f6');   // ligne « stop »
     }
     for (const o of [...objets].sort((a, b) => b.d - a.d)) {
       if (o.d >= 0.99) continue;
@@ -409,8 +412,8 @@ function sceneD(stage, api, { left, right }) {
     }
     // capot
     g.fillStyle = '#c92a2a';
-    g.beginPath(); g.moveTo(W * 0.22, H); g.lineTo(W * 0.3, H * 0.86); g.lineTo(W * 0.7, H * 0.86); g.lineTo(W * 0.78, H); g.closePath(); g.fill();
-    g.fillStyle = '#a61e1e'; g.fillRect(W * 0.3, H * 0.86, W * 0.4, H * 0.015);
+    g.beginPath(); g.moveTo(W * 0.32, H); g.lineTo(W * 0.37, H * 0.88); g.lineTo(W * 0.63, H * 0.88); g.lineTo(W * 0.68, H); g.closePath(); g.fill();
+    g.fillStyle = '#a61e1e'; g.fillRect(W * 0.37, H * 0.88, W * 0.26, H * 0.012);
   }
 
   // ── génération des leurres (rien ne bloque ma voie) ──
@@ -422,7 +425,7 @@ function sceneD(stage, api, { left, right }) {
       prochain.face = T + rand(1.2, 3.2);
     }
     if (T >= prochain.cycliste) {   // cycliste qui roule au bord droit de la chaussée, dans le même sens, plus lentement
-      objets.push({ type: 'cycliste', d: 0.99, lat: 1.16, c: pick(COULEURS), vd: -0.12 });
+      objets.push({ type: 'cycliste', d: 0.99, lat: 1.55, c: pick(COULEURS), vd: -0.12 });
       prochain.cycliste = T + rand(4, 8);
     }
     if (T >= prochain.carrefour && (dangerType !== 'carrefour' || dangerPose)) {
@@ -433,30 +436,36 @@ function sceneD(stage, api, { left, right }) {
     if (T >= prochain.hesite) {
       // piéton qui s'approche du bord du trottoir (ou sort entre deux voitures garées) puis s'arrête
       const entreGarees = Math.random() < 0.5;
-      objets.push({ type: 'pieton', d: rand(0.6, 0.9), lat: entreGarees ? 2.25 : 2.7, stop: entreGarees ? 1.55 : 2.08, vlat: -rand(0.5, 0.8), c: pick(COULEURS) });
+      objets.push({ type: 'pieton', d: rand(0.6, 0.9), lat: entreGarees ? 2.3 : 3.0, stop: entreGarees ? 1.85 : 2.45, vlat: -rand(0.5, 0.8), c: pick(COULEURS) });
       prochain.hesite = T + rand(2.5, 5);
     }
   }
 
-  // ── pose du danger (il entrera dans ma voie vers dangerAt) ──
+  // ── pose du danger ──
+  // Le chrono part au PREMIER indice visible, pour qu'on ne puisse pas anticiper :
+  //  - piéton / ballon : ils surgissent d'un coup d'entre deux voitures garées, déjà au bord de la voie ;
+  //  - voiture au carrefour : dès qu'elle démarre (les voitures « leurres » au stop ne bougent jamais) ;
+  //  - voiture de devant : dès que ses feux stop s'allument.
   function poserDanger() {
     dangerPose = true;
-    const c = pick(COULEURS);
-    if (dangerType === 'pieton') {          // surgit entre deux voitures garées
-      const v = rand(1.0, 1.4), t = (1.72 - BORD) / v;
-      objets.push(garee(0.5 + t * vd + 0.06), garee(0.5 + t * vd - 0.08));
-      objets.push({ type: 'pieton', danger: true, d: 0.5 + t * vd, lat: 1.72, vlat: -v, stop: 0.5, c });
-    } else if (dangerType === 'ballon') {   // roule depuis le trottoir et traverse
-      const v = rand(1.4, 1.9), t = (2.5 - BORD) / v;
-      objets.push({ type: 'ballon', danger: true, d: 0.5 + t * vd, lat: 2.5, vlat: -v });
-    } else if (dangerType === 'carrefour') { // une voiture sort de la rue transversale
-      objets.push({ type: 'carrefour', danger: true, d: 0.99, lat: 2.6, lat2: 2.6, c: pick(CARROSSERIES), vlat: 0, sortA: 0.62 });
-    } else {                                 // la voiture de devant roule, puis pile
-      objets.push({ type: 'devant', danger: true, d: 0.97, lat: VOIE, c: pick(CARROSSERIES), frein: false });
+    const c = pick(COULEURS), d0 = 0.5;
+    if (dangerType === 'pieton') {
+      objets.push(garee(d0 + 0.07), garee(d0 - 0.07));
+      objets.push({ type: 'pieton', danger: true, entre: true, d: d0, lat: 1.6, vlat: -rand(1.4, 1.8), stop: 0.5, c });
+      return true;
     }
+    if (dangerType === 'ballon') {
+      objets.push(garee(d0 + 0.07), garee(d0 - 0.07));
+      objets.push({ type: 'ballon', danger: true, entre: true, d: d0, lat: 1.6, vlat: -rand(2.0, 2.5) });
+      return true;
+    }
+    if (dangerType === 'carrefour') {
+      objets.push({ type: 'carrefour', danger: true, d: 0.99, lat: 2.6, lat2: 2.6, c: pick(CARROSSERIES), vlat: 0, sortA: 0.6 });
+    }
+    return false;
   }
-  // Instant de pose avant dangerAt, pour que l'entrée dans la voie tombe vers dangerAt.
-  const avance = () => ({ pieton: 0.4, ballon: 0.7, carrefour: (0.99 - 0.62) / vd + 0.9, freinage: 3.2 }[dangerType]);
+  // Instant de pose avant dangerAt (le carrefour doit arriver de loin).
+const avance = () => ({ pieton: 0, ballon: 0, carrefour: (0.99 - 0.6) / vd, freinage: 0 }[dangerType]);
 
   function boucle(ts) {
     if (!running) return;
@@ -467,13 +476,13 @@ function sceneD(stage, api, { left, right }) {
     px += steer * 0.9 * dt;
     scroll += VITESSE * dt;
     leurres();
-    if (!dangerPose && T >= dangerAt - avance()) poserDanger();
-
     let entre = false;
+    if (!dangerPose && T >= dangerAt - avance()) entre = poserDanger();
     for (const o of objets) {
+      if (o.type === 'devant' && !o.danger) { o.d -= o.vd * dt; continue; }
       if (o.type === 'devant') {
         if (!o.frein) {
-          o.d = Math.max(0.55, o.d - dt * 0.18);                 // je la rattrape, puis elle roule à ma vitesse
+          // elle roule à ma vitesse devant moi
           if (T >= dangerAt) { o.frein = true; o.tFrein = T; entre = true; }
         } else {
           const vrel = Math.min(VITESSE, 7 * (T - o.tFrein));     // elle freine à 7 m/s², moi je continue
@@ -483,7 +492,7 @@ function sceneD(stage, api, { left, right }) {
       }
       o.d -= dt * vd + (o.vd ?? 0) * dt;
       if (o.type === 'carrefour') {
-        if (o.sortA && o.d <= o.sortA) o.vlat = -1.1;                         // la voiture s'engage
+        if (o.sortA && !o.parti && o.d <= o.sortA) { o.parti = true; o.vlat = -1.6; if (o.danger) { o.entre = true; entre = true; } }   // elle démarre : premier indice
         o.lat2 += o.vlat * dt;
         if (o.sortA) { o.lat = o.lat2; if (o.lat2 <= VOIE) { o.vlat = 0; o.lat2 = VOIE; } }
         if (o.danger && !o.entre && o.lat2 < BORD) { o.entre = true; entre = true; }
