@@ -83,7 +83,7 @@ function ecranChoix(ilot) {
         : h('p', { class: 'info' }, 'Tous les élèves de cet îlot ont déjà commencé.'),
       docs.length ? h('div', { class: 'reprise' },
         h('h2', {}, 'Je reprends ma session'),
-        h('p', { class: 'petit-texte' }, 'Touche ton mode :'),
+        h('p', { class: 'petit-texte' }, 'Touche ta session :'),
         docs.sort((a, b) => a.mode.localeCompare(b.mode)).map(d =>
           h('button', { class: 'btn reprendre', onclick: () => reprendre(d) },
             h('b', {}, identite(d.ilot, d.mode)), h('span', { class: 'etat' }, LIBELLE_ETAPE[d.step] ?? '')))) : null,
@@ -98,7 +98,7 @@ async function nouveau(ilot, libres) {
   if (reservationEnCours) return;
   reservationEnCours = true;
   rafraichir = null;
-  ecran(h('p', { class: 'chargement' }, 'Attribution de ton mode…'));
+  ecran(h('p', { class: 'chargement' }, 'Tirage de ta distraction…'));
   let mode = null;
   try {
     // Attendre les réglages à jour du serveur (numéro de session), 4 s au plus.
@@ -109,7 +109,7 @@ async function nouveau(ilot, libres) {
     }
   } finally { reservationEnCours = false; }
   if (!mode) {
-    ecran(h('h1', {}, 'Oups'), h('p', {}, 'Tous les modes de cet îlot viennent d\'être pris. Si tu n\'as pas encore commencé, appelle le professeur.'),
+    ecran(h('h1', {}, 'Oups'), h('p', {}, 'Toutes les distractions de cet îlot viennent d\'être prises. Si tu n\'as pas encore commencé, appelle le professeur.'),
       h('button', { class: 'btn primary big', onclick: () => ecranChoix(ilot) }, 'Retour'));
     return;
   }
@@ -119,7 +119,7 @@ async function nouveau(ilot, libres) {
     h('p', {}, 'Tu es :'),
     h('p', { class: 'grosse-identite' }, identite(ilot, mode)),
     h('p', {}, `Tu vas passer deux tests : le test témoin, puis le test « ${MODES[mode].titre} ».`),
-    h('p', { class: 'info' }, '✏️ Écris ton mode sur ta feuille : il te servira pour reprendre ta session plus tard.'),
+    h('p', { class: 'info' }, '✏️ Écris ta distraction sur ta feuille : elle te servira pour reprendre ta session plus tard.'),
     h('button', { class: 'btn primary big', onclick: ecranAccroche }, 'Continuer'));
 }
 
