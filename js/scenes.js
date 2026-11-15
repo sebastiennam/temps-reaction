@@ -271,14 +271,14 @@ function sceneD(stage, api, { left, right }) {
 
   function reset() {
     tStart = null; T = 0; ph = rand(0, 100); px = rc(0) + VOIE; scroll = 0;
-    dangerAt = rand(4, 12); dangerType = pick(['pieton', 'ballon', 'carrefour', 'freinage']);
+    dangerAt = rand(4, 12); dangerType = pick(['pieton', 'ballon', 'velo', 'freinage', 'feu']);
     dangerPose = false; signale = false;
-    prochain = { garee: 0, trottoir: rand(0.3, 1.2), face: rand(0.5, 2), cycliste: rand(2, 5), carrefour: rand(2.5, 5), hesite: rand(1.5, 3.5) };
+    prochain = { garee: 0, trottoir: rand(0.3, 1.2), face: rand(0.5, 2), cycliste: rand(2, 5), feu: rand(2.5, 5), hesite: rand(1.5, 3.5) };
     objets = [];
     // Décor de départ : quelques voitures garées et piétons déjà visibles.
     for (let d = 0.25; d < 0.95; d += rand(0.18, 0.35)) objets.push(garee(d));
     for (let k = 0; k < 2; k++) objets.push(passant(rand(0.3, 0.9)));
-    if (dangerType === 'freinage') { objets.push({ type: 'devant', danger: true, d: 0.42, lat: VOIE, c: pick(CARROSSERIES), frein: false }); dangerPose = true; }
+    if (dangerType === 'freinage') { objets.push({ type: 'devant', danger: true, d: 0.36, lat: VOIE, c: pick(CARROSSERIES), frein: false }); dangerPose = true; }
     else if (Math.random() < 0.5) objets.push({ type: 'devant', d: rand(0.45, 0.6), lat: VOIE, c: pick(CARROSSERIES), frein: false, vd: -rand(0.03, 0.06) });   // leurre : elle s'éloigne sans freiner
   }
 
@@ -316,8 +316,23 @@ function sceneD(stage, api, { left, right }) {
     g.fillStyle = '#f1c27d'; g.beginPath(); g.arc(x, y - ht * 0.95, ht * 0.08, 0, 7); g.fill();        // tête
     g.fillStyle = '#fab005'; g.beginPath(); g.arc(x, y - ht * 0.97, ht * 0.09, Math.PI, 0); g.fill();  // casque
   }
+  // Cycliste vu de profil, qui traverse vers la gauche.
+  function veloProfil(x, y, u, c) {
+    const ht = u * 0.66, r = ht * 0.2, e = ht * 0.38, ped = Math.sin(T * 7) * ht * 0.06;
+    g.strokeStyle = '#1b1b1b'; g.lineWidth = Math.max(1.5, ht * 0.04);
+    g.beginPath(); g.arc(x - e, y - r, r, 0, 7); g.stroke();                       // roue avant (à gauche)
+    g.beginPath(); g.arc(x + e, y - r, r, 0, 7); g.stroke();                       // roue arrière
+    g.strokeStyle = '#2b8a3e'; g.beginPath();                                       // cadre
+    g.moveTo(x + e, y - r); g.lineTo(x, y - r); g.lineTo(x - e * 0.7, y - ht * 0.55); g.lineTo(x + e * 0.15, y - ht * 0.55); g.lineTo(x, y - r);
+    g.moveTo(x - e * 0.7, y - ht * 0.55); g.lineTo(x - e, y - r); g.stroke();
+    g.strokeStyle = '#333'; g.beginPath(); g.moveTo(x + e * 0.1, y - ht * 0.6); g.lineTo(x - e * 0.05 + ped, y - r * 0.6); g.stroke();   // jambe
+    g.fillStyle = c; g.beginPath();                                                 // buste penché vers l'avant
+    g.moveTo(x + e * 0.2, y - ht * 0.6); g.lineTo(x - e * 0.05, y - ht * 0.6); g.lineTo(x - e * 0.45, y - ht * 0.95); g.lineTo(x - e * 0.25, y - ht * 1.0); g.fill();
+    g.fillStyle = '#f1c27d'; g.beginPath(); g.arc(x - e * 0.5, y - ht * 1.07, ht * 0.08, 0, 7); g.fill();
+    g.fillStyle = '#fab005'; g.beginPath(); g.arc(x - e * 0.5, y - ht * 1.09, ht * 0.09, Math.PI, 0); g.fill();
+  }
   function ballon(x, y, u) {
-    const r = u * 0.12, cy = y - r, rot = (T * 4) % (2 * Math.PI);   // ballon de plage qui roule
+    const r = u * 0.2, cy = y - r - Math.abs(Math.sin(T * 6)) * u * 0.15, rot = (T * 4) % (2 * Math.PI);   // ballon de plage qui roule
     ['#e03131', '#ffd43b', '#1c7ed6', '#ffffff', '#e03131', '#ffd43b'].forEach((c, k) => {
       g.fillStyle = c; g.beginPath(); g.moveTo(x, cy);
       g.arc(x, cy, r, rot + k * Math.PI / 3, rot + (k + 1) * Math.PI / 3); g.closePath(); g.fill();
@@ -330,12 +345,31 @@ function sceneD(stage, api, { left, right }) {
     g.fillStyle = c; g.fillRect(x - w / 2, y - ht, w, ht * 0.8);
     g.fillStyle = '#a5d8ff'; g.fillRect(x - w * 0.35, y - ht * 1.25, w * 0.7, ht * 0.45);
     g.fillStyle = c; g.fillRect(x - w * 0.4, y - ht * 1.3, w * 0.8, ht * 0.07);
-    g.fillStyle = frein ? '#ff1a1a' : '#5a2a2a';
-    if (frein) g.fillRect(x - w * 0.12, y - ht * 1.22, w * 0.24, ht * 0.06);   // 3e feu stop
-    g.fillRect(x - w * 0.46, y - ht * 0.8, w * 0.18, ht * 0.2); g.fillRect(x + w * 0.28, y - ht * 0.8, w * 0.18, ht * 0.2);
-    if (frein) { g.fillStyle = 'rgba(255,40,40,.4)'; g.beginPath(); g.arc(x - w * 0.37, y - ht * 0.7, w * 0.24, 0, 7); g.fill(); g.beginPath(); g.arc(x + w * 0.37, y - ht * 0.7, w * 0.24, 0, 7); g.fill(); }
+    // feux arrière : grands blocs, gris foncé éteints, rouge vif + halo allumés
+    if (frein) {
+      g.fillStyle = 'rgba(255,30,30,.45)';
+      for (const sx of [-1, 1]) { g.beginPath(); g.arc(x + sx * w * 0.33, y - ht * 0.62, w * 0.32, 0, 7); g.fill(); }
+      g.beginPath(); g.arc(x, y - ht * 1.2, w * 0.2, 0, 7); g.fill();
+    }
+    g.fillStyle = frein ? '#ff2020' : '#3a2f2f';
+    g.fillRect(x - w * 0.5, y - ht * 0.85, w * 0.32, ht * 0.38); g.fillRect(x + w * 0.18, y - ht * 0.85, w * 0.32, ht * 0.38);
+    g.fillRect(x - w * 0.16, y - ht * 1.24, w * 0.32, ht * 0.09);                       // 3e feu stop
+    if (frein) { g.fillStyle = '#ffd0d0'; g.fillRect(x - w * 0.44, y - ht * 0.78, w * 0.14, ht * 0.12); g.fillRect(x + w * 0.3, y - ht * 0.78, w * 0.14, ht * 0.12); }
     g.fillStyle = '#111'; g.fillRect(x - w * 0.45, y - ht * 0.2, w * 0.2, ht * 0.2); g.fillRect(x + w * 0.25, y - ht * 0.2, w * 0.2, ht * 0.2);
   }
+  // Feu tricolore au bord de la route (poteau + boîtier). etat : 'vert' | 'orange' | 'rouge'
+  function feu(x, y, u, etat) {
+    const ht = u * 1.0, bw = u * 0.3, bh = u * 0.75, r = u * 0.1;
+    g.fillStyle = '#495057'; g.fillRect(x - u * 0.025, y - ht, u * 0.05, ht);
+    g.fillStyle = '#212529'; g.fillRect(x - bw / 2, y - ht - bh, bw, bh);
+    const lampes = [['rouge', '#ff2020', '#4a1a1a'], ['orange', '#ffa000', '#4a3a1a'], ['vert', '#20e060', '#1a3a24']];
+    lampes.forEach(([e, on, off], k) => {
+      const cy = y - ht - bh + bh * (0.18 + k * 0.32);
+      if (e === etat) { g.fillStyle = on + '55'; g.beginPath(); g.arc(x, cy, r * 2.2, 0, 7); g.fill(); }
+      g.fillStyle = e === etat ? on : off; g.beginPath(); g.arc(x, cy, r, 0, 7); g.fill();
+    });
+  }
+
   // Voiture qui arrive en face : phares.
   function voitureFace(x, y, u, c) {
     const w = u * 0.7, ht = w * 0.62;
@@ -384,6 +418,7 @@ function sceneD(stage, api, { left, right }) {
       quad(d1, d2, 1.3, 1.36, '#f1f1f1');                        // ligne de rive
       if (bande) quad(d1, d2, -0.03, 0.03, '#f6f6f6');           // ligne centrale discontinue
     }
+    for (const o of objets) if (o.type === 'feu' && o.d < 0.98) quad(Math.min(0.99, o.d + 0.012), Math.max(0, o.d - 0.012), 0.03, 1.3, '#f6f6f6');   // ligne d'arrêt du feu
     for (const o of objets) if (o.type === 'carrefour' && o.d < 0.98) {   // rue transversale à droite
       quad(Math.min(0.99, o.d + 0.035), Math.max(0, o.d - 0.035), 1.3, 3.5, '#5b5f66');
       quad(Math.min(0.99, o.d + 0.045), Math.min(0.99, o.d + 0.035), 1.36, 2.35, '#f6f6f6');   // ligne « stop »
@@ -395,11 +430,12 @@ function sceneD(stage, api, { left, right }) {
       switch (o.type) {
         case 'pieton': pieton(x, y, u, o.c, o.vlat || o.vd); break;
         case 'cycliste': cycliste(x, y, u, o.c); break;
+        case 'velo': veloProfil(x, y, u, o.c); break;
         case 'ballon': ballon(x, y, u); break;
         case 'garee': voitureArriere(x, y, u, o.c); break;
         case 'devant': voitureArriere(x, y, u, o.c, o.frein); break;
         case 'face': voitureFace(x, y, u, o.c); break;
-        case 'carrefour': { const [cx, cy, cs] = proj(o.d, o.lat2); voitureCote(cx, cy, W * K * cs, o.c); break; }
+        case 'feu': feu(x, y, u, o.etat); break;
       }
     }
     // avertissement : la voiture s'approche du bord de sa voie
@@ -428,10 +464,10 @@ function sceneD(stage, api, { left, right }) {
       objets.push({ type: 'cycliste', d: 0.99, lat: 1.55, c: pick(COULEURS), vd: -0.12 });
       prochain.cycliste = T + rand(4, 8);
     }
-    if (T >= prochain.carrefour && (dangerType !== 'carrefour' || dangerPose)) {
-      // voiture qui attend au stop de la rue transversale (elle ne sort pas)
-      objets.push({ type: 'carrefour', d: 0.99, lat: 2.6, lat2: 2.6, c: pick(CARROSSERIES), vlat: 0 });
-      prochain.carrefour = T + rand(5, 9);
+    if (T >= prochain.feu && (dangerType !== 'feu' || dangerPose)) {
+      // feu qui reste vert : on passe sans freiner
+      objets.push({ type: 'feu', d: 0.99, lat: 1.5, etat: 'vert' });
+      prochain.feu = T + rand(5, 9);
     }
     if (T >= prochain.hesite) {
       // piéton qui s'approche du bord du trottoir (ou sort entre deux voitures garées) puis s'arrête
@@ -443,29 +479,33 @@ function sceneD(stage, api, { left, right }) {
 
   // ── pose du danger ──
   // Le chrono part au PREMIER indice visible, pour qu'on ne puisse pas anticiper :
-  //  - piéton / ballon : ils surgissent d'un coup d'entre deux voitures garées, déjà au bord de la voie ;
-  //  - voiture au carrefour : dès qu'elle démarre (les voitures « leurres » au stop ne bougent jamais) ;
+  //  - piéton / ballon : ils apparaissent d'un coup DANS ma voie (sortis de derrière une voiture garée) :
+  //    pas de trajectoire d'approche à anticiper, c'est une menace dès le premier instant ;
+  //  (la voiture au carrefour reste un leurre : elle attend au stop et ne sort jamais)
   //  - voiture de devant : dès que ses feux stop s'allument.
   function poserDanger() {
     dangerPose = true;
     const c = pick(COULEURS), d0 = 0.5;
     if (dangerType === 'pieton') {
       objets.push(garee(d0 + 0.07), garee(d0 - 0.07));
-      objets.push({ type: 'pieton', danger: true, entre: true, d: d0, lat: 1.6, vlat: -rand(1.4, 1.8), stop: 0.5, c });
+      objets.push({ type: 'pieton', danger: true, entre: true, d: d0, lat: rand(0.6, 0.9), vlat: -0.25, stop: 0.4, c });   // déjà dans ma voie
       return true;
     }
     if (dangerType === 'ballon') {
       objets.push(garee(d0 + 0.07), garee(d0 - 0.07));
-      objets.push({ type: 'ballon', danger: true, entre: true, d: d0, lat: 1.6, vlat: -rand(2.0, 2.5) });
+      objets.push({ type: 'ballon', danger: true, entre: true, d: d0, lat: rand(0.7, 1.0), vlat: -0.6, stop: 0.3 });     // déjà dans ma voie
       return true;
     }
-    if (dangerType === 'carrefour') {
-      objets.push({ type: 'carrefour', danger: true, d: 0.99, lat: 2.6, lat2: 2.6, c: pick(CARROSSERIES), vlat: 0, sortA: 0.6 });
+    if (dangerType === 'velo') {
+      objets.push(garee(d0 + 0.07), garee(d0 - 0.07));
+      objets.push({ type: 'velo', danger: true, entre: true, d: d0, lat: rand(0.8, 1.1), vlat: -0.7, c });   // traverse ma voie
+      return true;
     }
+    if (dangerType === 'feu') objets.push({ type: 'feu', danger: true, d: 0.99, lat: 1.5, etat: 'vert', rougeA: 0.55 });
     return false;
   }
   // Instant de pose avant dangerAt (le carrefour doit arriver de loin).
-const avance = () => ({ pieton: 0, ballon: 0, carrefour: (0.99 - 0.6) / vd, freinage: 0 }[dangerType]);
+const avance = () => ({ pieton: 0, ballon: 0, velo: 0, feu: (0.99 - 0.55) / vd, freinage: 0 }[dangerType]);
 
   function boucle(ts) {
     if (!running) return;
@@ -485,12 +525,17 @@ const avance = () => ({ pieton: 0, ballon: 0, carrefour: (0.99 - 0.6) / vd, frei
           // elle roule à ma vitesse devant moi
           if (T >= dangerAt) { o.frein = true; o.tFrein = T; entre = true; }
         } else {
-          const vrel = Math.min(VITESSE, 7 * (T - o.tFrein));     // elle freine à 7 m/s², moi je continue
+          const vrel = Math.min(VITESSE, 3 + 6 * (T - o.tFrein)); // elle pile : elle se rapproche nettement dès l'allumage des feux
           o.d -= vrel / PROF * dt;
         }
         continue;
       }
       o.d -= dt * vd + (o.vd ?? 0) * dt;
+      if (o.type === 'feu') {
+        o.d -= dt * vd;
+        if (o.rougeA && o.etat === 'vert' && o.d <= o.rougeA) { o.etat = 'rouge'; o.entre = true; entre = true; }   // passe au rouge : premier indice
+        continue;
+      }
       if (o.type === 'carrefour') {
         if (o.sortA && !o.parti && o.d <= o.sortA) { o.parti = true; o.vlat = -1.6; if (o.danger) { o.entre = true; entre = true; } }   // elle démarre : premier indice
         o.lat2 += o.vlat * dt;
@@ -509,6 +554,7 @@ const avance = () => ({ pieton: 0, ballon: 0, carrefour: (0.99 - 0.6) / vd, frei
     const danger = objets.find(o => o.danger);
     if (danger && (danger.entre || danger.frein) && danger.d <= 0.06) {
       const lat = danger.type === 'carrefour' ? danger.lat2 : danger.lat;
+      if (danger.type === 'feu') { api.fail("Feu rouge grillé ! Tu n'as pas freiné à temps. Essai à refaire."); return; }
       if (lat > -0.1 && lat < BORD + 0.1) { api.fail("Collision ! Tu n'as pas freiné à temps. Essai à refaire."); return; }
     }
     if (Math.abs(px - rc(T) - VOIE) > TOL) { draw(); api.fail('Sortie de voie ! Reste dans ta voie avec ◀ et ▶. Essai à refaire.'); return; }
@@ -522,7 +568,7 @@ const avance = () => ({ pieton: 0, ballon: 0, carrefour: (0.99 - 0.6) / vd, frei
     startTrial() { reset(); delete stage.dataset.danger; running = true; raf = requestAnimationFrame(boucle); },
     stopTrial() { running = false; cancelAnimationFrame(raf); steer = 0; left.classList.remove('actif'); right.classList.remove('actif'); },
     earlyBrake() {
-      return "Ta voie était libre : rien n'y était encore entré (voitures en face ou garées, piétons sur le trottoir, voiture au stop, cycliste au bord…). Essai à refaire.";
+      return "Rien ne t'obligeait à t'arrêter (voitures en face ou garées, piétons sur le trottoir, cycliste sur sa bande, feu vert…). Essai à refaire.";
     },
     destroy() { this.stopTrial(); ro.disconnect(); cv.remove(); },
   };

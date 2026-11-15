@@ -42,10 +42,10 @@ export function introTest(kind) {
       regle('Une mauvaise réponse : l\'essai est à refaire.'));
 
     case 'D': return h('div', {},
-      consigne('Reste dans ta voie, à droite. Freine dès que quelque chose bloque ta voie.'),
+      consigne('Reste dans ta voie, à droite. Freine dès que tu dois t\'arrêter.'),
       regle('Maintiens ◀ ou ▶ appuyé pour rester dans ta voie.'),
-      regle('Dangers : quelqu\'un ou quelque chose qui entre dans ta voie, ou la voiture devant toi qui allume ses feux stop.'),
-      regle('Observe bien : voitures en face, voitures garées, piétons au bord du trottoir, voiture qui attend à un carrefour, cycliste… Tant que rien n\'entre dans ta voie, ne freine pas.'),
+      regle('Freine si : un piéton, un cycliste ou un ballon apparaît dans ta voie, la voiture devant toi allume ses feux stop, ou le feu passe au rouge.'),
+      regle('Observe bien : voitures en face, voitures garées, piétons sur le trottoir, cycliste sur la bande cyclable, feu vert… Tant que rien ne t\'oblige à t\'arrêter, ne freine pas.'),
       regle('Sortie de voie, ou freinage alors que ta voie est libre : l\'essai est à refaire.'));
   }
   return h('div');
